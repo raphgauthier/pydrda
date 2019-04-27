@@ -143,7 +143,7 @@ class Connection:
             ddm.write_requests_dds(self.sock, [
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
                 ddm.packEXCSQLSET(self.database),
-                ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
+                ddm.packSQLSTT_db2("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
 #                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
 
 
@@ -165,7 +165,7 @@ class Connection:
         elif self.db_type == 'db2':
             ddm.write_requests_dds(self.sock, [
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
-                ddm.packEXCSQLSET(self.database),
+                ddm.packEXCSQLSET_db2(self.database),
                 ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
 #                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
                 ddm.packPRPSQLSTT_db2(self.database),
