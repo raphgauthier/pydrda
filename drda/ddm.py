@@ -337,7 +337,8 @@ def packPRPSQLSTT_derby(database):
 def packPRPSQLSTT_db2(database):
     return pack_dds_object(
         cp.PRPSQLSTT,
-        _packPKGNAMCSN(database)
+        _packPKGNAMCSN(database) +
+        _pack_binary(cp.RTNSQLDA, bytes([241]))
     )
 
 
