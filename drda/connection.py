@@ -142,7 +142,7 @@ class Connection:
             ddm.write_requests_dds(self.sock, [
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
                 ddm.packEXCSQLSET(self.database),
-                ddm.packSQLSTT("SET CLIENT WRKSTNNAME {}".format(platform.node())),
+                ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
 
 
                 ddm.packEXCSQLIMM(self.database),
@@ -163,8 +163,12 @@ class Connection:
         elif self.db_type == 'db2':
             ddm.write_requests_dds(self.sock, [
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
+                ddm.packEXCSQLSET(self.database),
+                ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
                 ddm.packPRPSQLSTT_db2(self.database),
+                ddm.packSQLATTR("WITH HOLD "),
                 ddm.packSQLSTT(query),
+                ddm.packOPNQRY_db2(self.database),
             ])
             self._parse_response()
             ddm.write_requests_dds(self.sock, [
