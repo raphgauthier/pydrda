@@ -22,6 +22,7 @@
 # SOFTWARE.
 ##############################################################################
 import socket
+import platform
 import collections
 
 from drda import codepoint as cp
@@ -140,6 +141,10 @@ class Connection:
         elif self.db_type == 'db2':
             ddm.write_requests_dds(self.sock, [
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
+                ddm.packEXCSQLSET(self.database),
+                ddm.packSQLSTT("SET CLIENT WRKSTNNAME {}".format(platform.node())),
+
+
                 ddm.packEXCSQLIMM(self.database),
                 ddm.packSQLSTT(query),
                 ddm.packRDBCMM(),
