@@ -23,6 +23,7 @@
 ##############################################################################
 import socket
 import platform
+import locale
 import collections
 
 from drda import codepoint as cp
@@ -143,6 +144,7 @@ class Connection:
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
                 ddm.packEXCSQLSET(self.database),
                 ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
+                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
 
 
                 ddm.packEXCSQLIMM(self.database),
@@ -165,6 +167,7 @@ class Connection:
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
                 ddm.packEXCSQLSET(self.database),
                 ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
+                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
                 ddm.packPRPSQLSTT_db2(self.database),
                 ddm.packSQLATTR("WITH HOLD "),
                 ddm.packSQLSTT(query),
