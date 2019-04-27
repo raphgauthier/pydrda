@@ -171,9 +171,6 @@ class Connection:
                 ddm.packOPNQRY_db2(self.database),
             ])
             self._parse_response()
-            ddm.write_requests_dds(self.sock, [
-                ddm.packOPNQRY_db2(self.database),
-            ])
         else:
             raise ValueError('Unknown database type')
 
