@@ -368,8 +368,11 @@ def packOPNQRY_db2(database):
     return pack_dds_object(
         cp.OPNQRY,
         _packPKGNAMCSN(database) +
-        _pack_uint(cp.QRYBLKSZ, 32767, 4) +
-        _pack_binary(cp.DYNDTAFMT, bytes([0xF1]))
+        _pack_uint(cp.QRYBLKSZ, 65535, 4) +
+        _pack_uint(cp.MAXBLKEXT, 65535, 2) +
+        _pack_binary(cp.QRYCLSIMP, bytes([0x01])) +
+        _pack_binary(cp.DYNDTAFMT, bytes([0xF1])) +
+        _pack_binary(0x2136, bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff]))
     )
 
 
