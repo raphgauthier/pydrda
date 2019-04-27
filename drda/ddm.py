@@ -306,16 +306,11 @@ def packRDBCMM():
     return pack_dds_object(cp.RDBCMM, bytes())
 
 
-def _packPKGNAMCSN(database):
-    pkgnamcsn = bytearray(
-        binascii.a2b_hex(
-            '0044211353414d504c452020202020202020202020204e554c4c4944202020202020202020202020'
-            '53514c43324f323620202020202020202020414141414166416400c9'
-        )
+def _packPKGNAMCSN(database, pkgid="SQLC2026", pkgcnstkn="AAAAAfAd", pkgsn=201):
+    return _pack_binary(
+        cp.PKGNAMCSN,
+        ("%-18s%-18s%-18s%8s" % (database, "NULLID", pkgid, pkgcnstkn)).encode('utf-8') + pkgsn.to_bytes(2, byteorder='big')
     )
-    dbnam = (database + ' ' * 18).encode('utf-8')[:18]
-    pkgnamcsn[4:22] = dbnam
-    return bytes(pkgnamcsn)
 
 
 def packEXCSQLIMM(database):
