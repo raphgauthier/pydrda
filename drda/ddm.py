@@ -117,7 +117,7 @@ def parse_sqlcard_derby(obj, enc):
 
 def parse_sqlcard_db2(obj, message, enc, endian):
     if obj[0] == 0xff:
-        return
+        return None, b''
     assert obj[0] == 0       # SQLCAGRP FLAG
     sqlcode = int.from_bytes(obj[1:5], byteorder=endian, signed=True)
     sqlstate = obj[5:10]
