@@ -63,7 +63,7 @@ class Connection:
                 qrydsc = [(c[0], c[1:]) for c in [b[i:i+3] for i in range(0, len(b), 3)]]
             elif code_point == cp.QRYDTA:
                 b = obj
-                while True:
+                while len(b):
                     if (b[0], b[1]) != (0xff, 0x00):
                         break
                     b = b[2:]
