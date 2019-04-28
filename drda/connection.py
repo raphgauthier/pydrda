@@ -200,16 +200,46 @@ class Connection:
                 cur_id, False, True
             )
         elif self.db_type == 'db2':
-            ddm.write_requests_dds(self.sock, [
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packEXCSAT_MGRLVLLS([cp.CCSIDMGR, 1208]),
+                cur_id, False, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packEXCSQLSET_db2(self.database),
+                cur_id, True, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packSQLSTT("SET CLIENT WRKSTNNAME '{}'".format(platform.node())),
-#                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
+                cur_id, True, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
+                ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
+                cur_id, False, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packPRPSQLSTT_db2(self.database),
+                cur_id, True, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packSQLATTR("WITH HOLD "),
+                cur_id, True, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packSQLSTT(query),
+                cur_id, False, False
+            )
+            cur_id = ddm.write_request_dds(
+                self.sock,
                 ddm.packOPNQRY_db2(self.database),
-            ])
+                cur_id, False, True
+            )
             self._parse_response()
         else:
             raise ValueError('Unknown database type')
