@@ -134,11 +134,21 @@ class Connection:
             ddm.packSECCHK(secmec, self.database, user, password, self._enc),
             cur_id, False, False
         )
-        cur_id = ddm.write_request_dds(
-            self.sock,
-            ddm.packACCRDB(self.database, self._enc),
-            cur_id, False, True
-        )
+        if self.db_type == 'derby':
+            cur_id = ddm.write_request_dds(
+                self.sock,
+                ddm.packACCRDB_derby(self.database, self._enc),
+                cur_id, False, True
+            )
+        elif self.db_type == 'db2':
+            cur_id = ddm.write_request_dds(
+                self.sock,
+                ddm.packACCRDB_db2(self.database, self._enc),
+                cur_id, False, True
+            )
+        else:
+            raise ValueError('Unknown database type')
+
         self._parse_response()
 
     def __enter__(self):
