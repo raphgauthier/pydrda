@@ -307,9 +307,14 @@ def packRDBCMM():
 
 
 def _packPKGNAMCSN(database, pkgid="SQLC2026", pkgcnstkn="AAAAAfAd", pkgsn=201):
+    b = ("%-18s%-18s%-18s" % (database, "NULLID", pkgid)).encode('utf-8')
+    if pkgcnstkn is None:
+        b += b'\x01' * 8
+    else:
+        b += ("%8s" % (pkgcnstkn,)).encode('utf-8')
     return _pack_binary(
         cp.PKGNAMCSN,
-        ("%-18s%-18s%-18s%8s" % (database, "NULLID", pkgid, pkgcnstkn)).encode('utf-8') + pkgsn.to_bytes(2, byteorder='big')
+        b + pkgsn.to_bytes(2, byteorder='big')
     )
 
 
@@ -347,7 +352,7 @@ def packDSCSQLSTT(database):
 def packEXCSQLSET_db2(database):
     return pack_dds_object(
         cp.EXCSQLSET,
-        _packPKGNAMCSN(database, "SYSSH200", "", 1)
+        _packPKGNAMCSN(database, "SYSSH200", None, 1)
     )
 
 
