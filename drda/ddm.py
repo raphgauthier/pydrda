@@ -220,31 +220,43 @@ def read_dds(sock):
     return dds_type, chained, number, code_point, obj[4:]
 
 
+def write_request_dds(sock, o, cur_id, next_dds_has_same_id, last_packet):
+    "Write request DDS packets"
+    code_point = int.from_bytes(o[2:4], byteorder='big')
+    _send_to_sock(sock, (len(o)+6).to_bytes(2, byteorder='big'))
+    if code_point in (cp.SQLSTT, cp.SQLATTR):
+        flag = 3    # DSS object
+    else:
+        flag = 1    # DSS request
+    if not last_packet:
+        flag |= 0b01000000
+    if next_dds_has_same_id:
+        next_id = cur_id
+        flag |= 0b00010000
+    else:
+        next_id = cur_id + 1
+    _send_to_sock(sock, bytes([0xD0, flag]))
+    _send_to_sock(sock, cur_id.to_bytes(2, byteorder='big'))
+    _send_to_sock(sock, o)
+    cur_id = next_id
+    return cur_id
+
+
 def write_requests_dds(sock, obj_list):
     "Write request DDS packets"
     cur_id = 1
     for i in range(len(obj_list)):
         o = obj_list[i]
+
         code_point = int.from_bytes(o[2:4], byteorder='big')
-        _send_to_sock(sock, (len(o)+6).to_bytes(2, byteorder='big'))
-        if code_point in (cp.SQLSTT, cp.SQLATTR):
-            flag = 3    # DSS object
-        else:
-            flag = 1    # DSS request
-        if i < len(obj_list) - 1:
-            flag |= 0b01000000
         if code_point in (
             cp.EXCSQLIMM, cp.PRPSQLSTT, cp.SQLATTR,
         ):
-            next_id = cur_id
-            flag |= 0b00010000
+            next_dds_has_same_id = True
         else:
-            next_id = cur_id + 1
-        _send_to_sock(sock, bytes([0xD0, flag]))
-        _send_to_sock(sock, cur_id.to_bytes(2, byteorder='big'))
-        _send_to_sock(sock, o)
-        cur_id = next_id
+            next_dds_has_same_id = False
 
+        cur_id = write_request_dds(sock, o, cur_id, next_dds_has_same_id, i==len(obj_list) -1)
 
 def packEXCSAT(conn, mgrlvlls):
     b = b''
