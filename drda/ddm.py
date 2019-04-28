@@ -116,22 +116,32 @@ def parse_sqlcard_derby(obj, enc):
 
 
 def parse_sqlcard_db2(obj, message, enc, endian):
+    if obj[0] == 0xff:
+        return
+    assert obj[0] == 0       # SQLCAGRP FLAG
     sqlcode = int.from_bytes(obj[1:5], byteorder=endian, signed=True)
-    sqlstate = obj[5:10].decode('ascii')
+    sqlstate = obj[5:10]
     sqlerrproc = obj[10:18]
-    misc = obj[18:54]
-    rest = obj[54:]
+
+    assert obj[18] == 0     # SQLCAXGRP FLAG
+    sqlerrd = obj[19:25]
+    sqlwarn = obj[25:36]
+
+    rest = obj[36+18:]
     ln = int.from_bytes(rest[:2], byteorder='big')
-    sqlrdbname = obj[2:2+ln]
+    sqlrdbname = rest[2:2+ln].decode('utf-8')
     rest = rest[2+ln:]
 
     ln = int.from_bytes(rest[:2], byteorder='big')
-    sqlerrmsg_m = obj[2:2+ln]
+    sqlerrmsg_m = rest[2:2+ln]
     rest = rest[2+ln:]
 
     ln = int.from_bytes(rest[:2], byteorder='big')
-    sqlerrmsg_s = obj[2:2+ln]
+    sqlerrmsg_s = rest[2:2+ln]
     rest = rest[2+ln:]
+
+    assert rest[0] == 0xFF  # SQLDIAGGRP
+    rest = rest[1:]
 
     if sqlcode < 0:
         err = drda.OperationalError(sqlcode, sqlstate, message)
@@ -196,6 +206,8 @@ def parse_sqldard_db2(obj, message, enc, endian):
     err, rest = parse_sqlcard_db2(obj, message, enc, endian)
     if not err:
         ln = int.from_bytes(rest[19:21], byteorder='big')
+        print('parse_sqldard_db2 column count=', ln)
+
         b = rest[21:]
         for i in range(ln):
             d, b = _parse_column(b)
