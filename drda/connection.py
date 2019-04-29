@@ -250,23 +250,10 @@ class Connection:
                 ddm.packOPNQRY_db2(self.database),
                 cur_id, False, True
             )
-            self._parse_response()
         else:
             raise ValueError('Unknown database type')
 
-        response = self._parse_response()
-
-        if self.db_type == 'db2':
-            ddm.write_requests_dds(self.sock, [
-                ddm.packDSCSQLSTT(self.database),
-            ])
-            self._parse_response()
-            ddm.write_requests_dds(self.sock, [
-                ddm.packCLSQRY(self.database),
-            ])
-            self._parse_response()
-
-        return response
+        return self._parse_response()
 
     def is_connect(self):
         return bool(self.sock)
