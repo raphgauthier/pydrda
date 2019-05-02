@@ -342,10 +342,11 @@ def packPRPSQLSTT(pkgid, pkgcnstkn, pkgsn, database):
     )
 
 
-def packDSCSQLSTT(database):
+def packDSCSQLSTT(pkgid, pkgcnstkn, pkgsn, database):
     return pack_dds_object(
         cp.DSCSQLSTT,
-        _packPKGNAMCSN(database) + _pack_uint(cp.QRYINSID, 0, 8)
+        _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
+        _pack_binary(cp.TYPSQLDA, bytes([1]))
     )
 
 
