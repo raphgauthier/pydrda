@@ -227,17 +227,31 @@ def parse_sqldard(obj, enc, endian, db_type):
 def read_dds(sock):
     "Read one DDS packet from socket"
     b = _recv_from_sock(sock, 6)
-    ln = int.from_bytes(b[:2], byteorder='big')
-    assert b[2] == 0xD0
-    dds_type = b[3] & 0b1111
-    chained = b[3] & 0b01000000
-    number = int.from_bytes(b[4:6],  byteorder='big')
-    obj = _recv_from_sock(sock, ln-6)
+    if b[:2]<0xFFFF:                                    # Mapping Small DDM Layer B Objects to Layer A DSSs
+        ln = int.from_bytes(b[:2], byteorder='big')
+        assert b[2] == 0xD0
+        dds_type = b[3] & 0b1111
+        chained = b[3] & 0b01000000
+        number = int.from_bytes(b[4:6],  byteorder='big')
+        obj = _recv_from_sock(sock, ln-6)
 
-    assert int.from_bytes(obj[:2], byteorder='big') == ln - 6
-    code_point = int.from_bytes(obj[2:4], byteorder='big')
+        assert int.from_bytes(obj[:2], byteorder='big') == ln - 6
+        code_point = int.from_bytes(obj[2:4], byteorder='big')
+        obj = obj[4:]
 
-    return dds_type, chained, number, code_point, obj[4:]
+    elif b[:2]==0xFFFF:                                 # Mapping Large DDM Layer B Objects to Layer A DSSs
+        assert b[2] == 0xD0
+        dds_type = b[3] & 0b1111
+        chained = b[3] & 0b01000000
+        number = int.from_bytes(b[4:6],  byteorder='big')
+
+        largeobjectdescription = _recv_from_sock(sock, 8)
+        assert int.from_bytes(largeobjectdescription[:2], byteorder='big') == 0x8008
+        code_point = int.from_bytes(largeobjectdescription[2:4], byteorder='big')
+        ln = int.from_bytes(largeobjectdescription[4:8], byteorder='big')
+        obj = _recv_from_sock(sock, ln)
+
+    return dds_type, chained, number, code_point, obj
 
 
 def write_request_dds(sock, o, cur_id, next_dds_has_same_id, last_packet):
