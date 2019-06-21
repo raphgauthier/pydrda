@@ -94,6 +94,8 @@ class Connection:
                             ),
                             1, False, True
                         )
+                    else:
+                        break
 
 #            if more_data:
 #                ddm.write_request_dds(
