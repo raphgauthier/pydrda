@@ -114,7 +114,7 @@ class Connection:
         secmec = sectkn = None
         chained = True
         while chained:
-            dds_type, chained, number, code_point, obj = ddm.read_dds(self.sock)
+            dds_type, chained, number, code_point, obj, more_data = ddm.read_dds(self.sock)
             if code_point == cp.ACCSECRD:
                 while len(obj):
                     ln = int.from_bytes(obj[:2], byteorder='big')
