@@ -44,7 +44,6 @@ class Connection:
         chained = True
         err_msg = None
 
-        more_data = False
         while True:
             while chained:
                 dds_type, chained, number, code_point, obj, more_data = ddm.read_dds(self.sock)
@@ -86,27 +85,17 @@ class Connection:
                             v, b = utils.read_field(t, ps, b, self.endian)
                             r.append(v)
                         results.append(tuple(r))
-                    if more_data:
-                        ddm.write_request_dds(
-                            self.sock,
-                            ddm.packCNTQRYderby(
-                                self.pkgid, self.pkgcnstkn, self.pkgsn, self.database
-                            ),
-                            1, False, True
-                        )
-                    else:
-                        break
 
-#            if more_data:
-#                ddm.write_request_dds(
-#                    self.sock,
-#                    ddm.packCNTQRY(
-#                        self.pkgid, self.pkgcnstkn, self.pkgsn, self.database
-#                    ),
-#                    1, False, True
-#                )
-#            else:
-#                break
+            if more_data == True:
+                ddm.write_request_dds(
+                    self.sock,
+                    ddm.packCNTQRYderby(
+                        self.pkgid, self.pkgcnstkn, self.pkgsn, self.database
+                    ),
+                    1, False, True
+                )
+            else:
+                break
 
         if err:
             raise err
