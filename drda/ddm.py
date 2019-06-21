@@ -228,6 +228,7 @@ def read_dds(sock):
     "Read one DDS packet from socket"
     b = _recv_from_sock(sock, 6)
     if int.from_bytes(b[:2], byteorder='big') < 0xFFFF:         # Mapping Small DDM Layer B Objects to Layer A DSSs
+        more_data = False
         ln = int.from_bytes(b[:2], byteorder='big')
         assert b[2] == 0xD0
         dds_type = b[3] & 0b1111
@@ -240,6 +241,7 @@ def read_dds(sock):
         obj = obj[4:]
 
     elif int.from_bytes(b[:2], byteorder='big') == 0xFFFF:      # Mapping Large DDM Layer B Objects to Layer A DSSs
+        more_data = True
         assert b[2] == 0xD0
         dds_type = b[3] & 0b1111
         chained = b[3] & 0b01000000
@@ -251,7 +253,7 @@ def read_dds(sock):
         ln = int.from_bytes(largeobjectdescription[4:8], byteorder='big')
         obj = _recv_from_sock(sock, ln)
 
-    return dds_type, chained, number, code_point, obj
+    return dds_type, chained, number, code_point, obj, more_data
 
 
 def write_request_dds(sock, o, cur_id, next_dds_has_same_id, last_packet):
@@ -522,6 +524,14 @@ def packCNTQRY(pkgid, pkgcnstkn, pkgsn, database):
         _pack_uint(cp.QRYINSID, 0, 8) +
         _pack_binary(cp.RTNEXTDTA, bytes([0x02])) +
         _pack_binary(cp.FREPRVREF, bytes([0xf0]))
+    )
+
+def packCNTQRYderby(pkgid, pkgcnstkn, pkgsn, database):
+    return pack_dds_object(
+        cp.CNTQRY,
+        _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
+        _pack_uint(cp.QRYBLKSZ, 65535, 4) +
+        _pack_uint(cp.QRYINSID, 0, 8)
     )
 
 
