@@ -44,9 +44,11 @@ class Connection:
         chained = True
         err_msg = None
 
+        more_data = False
         while True:
             while chained:
                 dds_type, chained, number, code_point, obj, more_data = ddm.read_dds(self.sock)
+                print(hex(code_point), more_data)
                 if code_point == cp.SQLERRRM:
                     err_msg = ddm.parse_reply(obj).get(cp.SRVDGN).decode('utf-8')
                 elif code_point == cp.SQLCARD:
@@ -74,6 +76,7 @@ class Connection:
                     b = b[2:]
                     # [(DRDA_TYPE_xxxx, size_binary), ...]
                     qrydsc = [(c[0], c[1:]) for c in [b[i:i+3] for i in range(0, len(b), 3)]]
+                    print(qrydsc)
                 elif code_point == cp.QRYDTA:
                     b = obj
                     while len(b):
@@ -86,14 +89,15 @@ class Connection:
                             r.append(v)
                         results.append(tuple(r))
 
-            if more_data == True:
+            if more_data:
                 ddm.write_request_dds(
                     self.sock,
-                    ddm.packCNTQRYderby(
-                        self.pkgid, self.pkgcnstkn, self.pkgsn, self.database
+                    ddm.packCNTQRY(
+                        self.pkgid, self.pkgcnstkn, self.pkgsn, self.database, self.db_type
                     ),
                     1, False, True
                 )
+                chained = True
             else:
                 break
 
@@ -232,6 +236,9 @@ class Connection:
         self.close()
 
     def _set_valiables(self):
+        lc_type = locale.getlocale()[0]
+        if lc_type is None:
+            lc_type = "en_US"
         cur_id = 1
         cur_id = ddm.write_request_dds(
             self.sock,
@@ -250,7 +257,7 @@ class Connection:
         )
         cur_id = ddm.write_request_dds(
             self.sock,
-            ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(locale.getlocale()[0])),
+            ddm.packSQLSTT("SET CURRENT LOCALE LC_CTYPE='{}'".format(lc_type)),
             cur_id, False, False
         )
         cur_id = ddm.write_request_dds(

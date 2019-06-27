@@ -228,6 +228,7 @@ def read_dds(sock):
     "Read one DDS packet from socket"
     b = _recv_from_sock(sock, 6)
     if int.from_bytes(b[:2], byteorder='big') < 0xFFFF:         # Mapping Small DDM Layer B Objects to Layer A DSSs
+        print(b[:6], "small layer")
         more_data = False
         ln = int.from_bytes(b[:2], byteorder='big')
         assert b[2] == 0xD0
@@ -241,6 +242,7 @@ def read_dds(sock):
         obj = obj[4:]
 
     elif int.from_bytes(b[:2], byteorder='big') == 0xFFFF:      # Mapping Large DDM Layer B Objects to Layer A DSSs
+        print("large layer")
         more_data = True
         assert b[2] == 0xD0
         dds_type = b[3] & 0b1111
@@ -251,7 +253,15 @@ def read_dds(sock):
         assert int.from_bytes(largeobjectdescription[:2], byteorder='big') == 0x8008
         code_point = int.from_bytes(largeobjectdescription[2:4], byteorder='big')
         ln = int.from_bytes(largeobjectdescription[4:8], byteorder='big')
-        obj = _recv_from_sock(sock, ln)
+        obj = _recv_from_sock(sock, 32753)
+        print("obj-4 DSS1", obj[-4:], len(obj))
+        nxt_dss_size = _recv_from_sock(sock, 2)
+        nxt_dss_size = int.from_bytes(nxt_dss_size, byteorder='big')
+        print('nxt_dss_size:',nxt_dss_size)
+        print(min(32769, nxt_dss_size-2))
+        obj += _recv_from_sock(sock, min(32769, nxt_dss_size-2))
+        print("obj-10 DSS2", obj[-4:-2], len(obj))
+
 
     return dds_type, chained, number, code_point, obj, more_data
 
@@ -516,24 +526,25 @@ def packOPNQRY(pkgid, pkgcnstkn, pkgsn, database):
     )
 
 
-def packCNTQRY(pkgid, pkgcnstkn, pkgsn, database):
-    return pack_dds_object(
-        cp.CNTQRY,
-        _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
-        _pack_uint(cp.QRYBLKSZ, 65535, 4) +
-        _pack_uint(cp.QRYINSID, 0, 8) +
-        _pack_binary(cp.RTNEXTDTA, bytes([0x02])) +
-        _pack_binary(cp.FREPRVREF, bytes([0xf0]))
-    )
+def packCNTQRY(pkgid, pkgcnstkn, pkgsn, database, db_type):
+    if db_type=='db2':
+        return pack_dds_object(
+            cp.CNTQRY,
+            _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
+            _pack_uint(cp.QRYBLKSZ, 65535, 4) +
+            _pack_uint(cp.QRYINSID, 0, 8) +
+            _pack_binary(cp.RTNEXTDTA, bytes([0x02])) +
+            _pack_binary(cp.FREPRVREF, bytes([0xf0]))
+        )
 
-def packCNTQRYderby(pkgid, pkgcnstkn, pkgsn, database):
-    return pack_dds_object(
-        cp.CNTQRY,
-        _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
-        _pack_uint(cp.QRYBLKSZ, 65535, 4) +
-        _pack_uint(cp.QRYINSID, 0, 8)
-    )
-
+    elif db_type=='derby':
+        return pack_dds_object(
+            cp.CNTQRY,
+            _packPKGNAMCSN(database, pkgid, pkgcnstkn, pkgsn) +
+            _pack_uint(cp.QRYBLKSZ, 65535, 4) +
+            _pack_uint(cp.QRYINSID, 0, 8) +
+            _pack_binary(cp.QRYBLKRST, bytes([0xf1]))
+        )
 
 def packSQLSTT(sql):
     return pack_dds_object(
