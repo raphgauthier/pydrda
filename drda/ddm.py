@@ -228,7 +228,6 @@ def read_dds(sock):
     "Read one DDS packet from socket"
     b = _recv_from_sock(sock, 6)
     if int.from_bytes(b[:2], byteorder='big') < 0xFFFF:         # Mapping Small DDM Layer B Objects to Layer A DSSs
-        print(b[:6], "small layer")
         more_data = False
         ln = int.from_bytes(b[:2], byteorder='big')
         assert b[2] == 0xD0
@@ -242,7 +241,6 @@ def read_dds(sock):
         obj = obj[4:]
 
     elif int.from_bytes(b[:2], byteorder='big') == 0xFFFF:      # Mapping Large DDM Layer B Objects to Layer A DSSs
-        print("large layer")
         more_data = True
         assert b[2] == 0xD0
         dds_type = b[3] & 0b1111
@@ -254,13 +252,11 @@ def read_dds(sock):
         code_point = int.from_bytes(largeobjectdescription[2:4], byteorder='big')
         ln = int.from_bytes(largeobjectdescription[4:8], byteorder='big')
         obj = _recv_from_sock(sock, 32753)
-        print("obj-4 DSS1", obj[-4:], len(obj))
         nxt_dss_size = _recv_from_sock(sock, 2)
         nxt_dss_size = int.from_bytes(nxt_dss_size, byteorder='big')
-        print('nxt_dss_size:',nxt_dss_size)
-        print(min(32769, nxt_dss_size-2))
         obj += _recv_from_sock(sock, min(32769, nxt_dss_size-2))
-        print("obj-10 DSS2", obj[-4:-2], len(obj))
+
+        assert obj[-4:-2] =! b'\x00\x04'            # Unknown error : sometimes those two bytes can be added by the server in the answer, within the last row of a large DSS, or whithin a value... To be investigated ...
 
 
     return dds_type, chained, number, code_point, obj, more_data

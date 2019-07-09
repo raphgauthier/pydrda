@@ -48,7 +48,6 @@ class Connection:
         while True:
             while chained:
                 dds_type, chained, number, code_point, obj, more_data = ddm.read_dds(self.sock)
-                print(hex(code_point), more_data)
                 if code_point == cp.SQLERRRM:
                     err_msg = ddm.parse_reply(obj).get(cp.SRVDGN).decode('utf-8')
                 elif code_point == cp.SQLCARD:
@@ -76,7 +75,6 @@ class Connection:
                     b = b[2:]
                     # [(DRDA_TYPE_xxxx, size_binary), ...]
                     qrydsc = [(c[0], c[1:]) for c in [b[i:i+3] for i in range(0, len(b), 3)]]
-                    print(qrydsc)
                 elif code_point == cp.QRYDTA:
                     b = obj
                     while len(b):
